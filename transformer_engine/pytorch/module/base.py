@@ -785,12 +785,9 @@ class TransformerEngineBaseModule(torch.nn.Module, ABC):
             ):
                 extra[k] = v
         state["extra_fp8_variables"] = extra
-
-        # Serialize state into byte tensor
+        # Serialize state into byte tensor 
         torch.cuda.synchronize()
-        state_serialized = bytearray(pickle.dumps(state))
-        state_serialized = torch.frombuffer(state_serialized, dtype=torch.uint8)
-        return state_serialized
+        return state
 
     def set_extra_state(self, state: torch.Tensor) -> None:
         """Load previous state."""
@@ -805,6 +802,8 @@ class TransformerEngineBaseModule(torch.nn.Module, ABC):
             # Deprecated format with io.BytesIO
             state.seek(0)
             state = torch.load(state, map_location="cuda")
+        elif isinstance(state, dict):
+            return state
         else:
             raise RuntimeError("Unsupported checkpoint format.")
 
